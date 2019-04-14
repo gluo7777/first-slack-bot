@@ -23,6 +23,8 @@ module.exports = controller => {
             }
         })
 
+    const TIMEOUT = 3000
+
     // base conversation with default path only
     controller.hears(
         ['^talk$'],
@@ -35,13 +37,19 @@ module.exports = controller => {
                     debug({ err })
                     bot.say('Unable to talk right now.')
                 } else {
-                    convo.say(`Starting conversation with ${message.user}!`)
-                    convo.ask('So what do you want to talk about?', (response, convo) => {
+                    convo.say(`Starting conversation with <@${message.user}>!`)
+                    convo.setTimeout(TIMEOUT) // 3 seconds for user to respond
+                    convo.ask('So, <@${message.user}>, what do you want to talk about?', (response, convo) => {
                         const subject = convertPronouns(response.text)
                         convo.say(`Sorry, I don't wanna talk about ${subject}...`)
-                        convo.next()
+                        convo.next() // proceed to the next message in the conversation. This must be called at the end of each handler.
                     })
                 }
+                convo.on('end', convo => {
+                    if (convo.status === 'timeout') {
+                        bot.reply(message, `Sorry <@${message.user}>, but you took more than ${TIMEOUT} to respond.`)
+                    }
+                })
             })
         })
 
@@ -66,22 +74,24 @@ module.exports = controller => {
 
                 // fall back path where neither first/second matched
                 convo.addMessage({
-                    text: `I didn't understand what you picked...`,
+                    text: `Alright we're ending the conversation...`,
                     action: 'default'
                 }, 'bad_response')
 
                 // create a question to start traversing paths
                 convo.addQuestion('Do you watch anime?', [
                     {
-                        pattern: 'yes',
+                        /*pattern: 'yes',*/
+                        pattern: bot.utterances.yes, /* Matches phrases like yes, yeah, yup, ok and sure. */
                         callback: (response, convo) => convo.gotoThread('first_thread')
                     },
                     {
-                        pattern: 'no',
+                        pattern: bot.utterances.no, /* Matches phrases like no, nah, nope */
                         callback: (response, convo) => convo.gotoThread('second_thread')
                     },
                     {
                         default: true,
+                        pattern: bot.utterances.quit,
                         callback: (response, convo) => convo.gotoThread('bad_response')
                     }
                 ], {}, 'default')

@@ -9,9 +9,10 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}\\bot.js",
-            "env": {
-                "DEBUG": "will:*"
-            }
+            "envFile": "${workspaceFolder}/.debug.env",
+            "args": [
+                "DEBUG=*"
+            ]
         }
     ]
 }
