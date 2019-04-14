@@ -1,5 +1,6 @@
 # Deploying on stack (development)
 - Configure .env properties
+    - add MONGO_URI pointing to mongodb
 - configure endpoints on api.slack.com
     - https://botkit.ai/docs/provisioning/slack-events-api.html
 - install app to workspace
